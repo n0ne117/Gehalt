@@ -1,0 +1,16 @@
+# Private data – never commit
+backend/seed.json
+backend/data/
+scratch/
+*.xlsx
+gehalt*.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local tooling
+.DS_Store
+.claude/

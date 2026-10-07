@@ -1,0 +1,10 @@
+*.xlsx
+scratch/
+backend/data/
+**/__pycache__/
+*.pyc
+.git/
+.gitignore
+.DS_Store
+.claude/
+README.md

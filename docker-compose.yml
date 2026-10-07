@@ -1,0 +1,15 @@
+services:
+  gehalt:
+    build: .
+    container_name: gehalt
+    ports:
+      - "9605:8000"
+    volumes:
+      # Persistent, human-readable data store (gehalt.json lives here).
+      - gehalt-data:/data
+    environment:
+      - DATA_FILE=/data/gehalt.json
+    restart: unless-stopped
+
+volumes:
+  gehalt-data:
