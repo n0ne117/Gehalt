@@ -12,8 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
-# Data lives on a mounted volume so entries survive container rebuilds.
-VOLUME ["/data"]
+# Data lives in /data, bind-mounted from ./data by docker-compose.yml.
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \

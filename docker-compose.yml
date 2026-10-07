@@ -5,11 +5,8 @@ services:
     ports:
       - "9605:8000"
     volumes:
-      # Persistent, human-readable data store (gehalt.json lives here).
-      - gehalt-data:/data
+      # Persistent, human-readable data store: ./data/gehalt.json on the host.
+      - ./data:/data
     environment:
       - DATA_FILE=/data/gehalt.json
     restart: unless-stopped
-
-volumes:
-  gehalt-data:

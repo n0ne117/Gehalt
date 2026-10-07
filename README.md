@@ -19,7 +19,7 @@ geladen (siehe unten).
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
-DATA_FILE=./backend/data/gehalt.json .venv/bin/uvicorn app:app --app-dir backend --port 9605
+DATA_FILE=./data/gehalt.json .venv/bin/uvicorn app:app --app-dir backend --port 9605
 ```
 
 ## Bedienung
@@ -43,14 +43,17 @@ DATA_FILE=./backend/data/gehalt.json .venv/bin/uvicorn app:app --app-dir backend
 
 ## Speicherung
 
-Die Daten liegen in einer JSON-Datei im Docker-Volume `gehalt-data`
-(`/data/gehalt.json` im Container; Docker benennt das Volume meist
-`gehalt_gehalt-data`). Das Volume bleibt über Rebuilds hinweg erhalten.
-Private Daten (`backend/data/`, `*.xlsx`, `gehalt*.json`, `seed.json`) sind
+Die Daten liegen in **`./data/gehalt.json`** im Projektordner (im Container
+als `/data` eingebunden). Die Datei bleibt über Rebuilds hinweg erhalten und
+lässt sich direkt sichern oder kopieren.
+Private Daten (`data/`, `*.xlsx`, `gehalt*.json`, `seed.json`) sind
 per `.gitignore` vom Repository ausgeschlossen.
 
+**Sicherung:** `data/gehalt.json` kopieren oder in der App *Export* nutzen.
+
 **Umzug auf eine neue Instanz:** in der alten App *Export*, neue Instanz
-starten, dort *Import*. Alternativ per Kommandozeile sichern:
+starten, dort *Import*. Ältere Versionen ohne Export-Knopf speicherten in
+einem Docker-Volume; die Datei lässt sich dort so herausholen:
 
 ```bash
 docker compose cp gehalt:/data/gehalt.json ./gehalt-backup.json

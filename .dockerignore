@@ -1,6 +1,6 @@
 *.xlsx
 scratch/
-backend/data/
+data/
 **/__pycache__/
 *.pyc
 .git/

@@ -1,6 +1,7 @@
 # Private data – never commit
 backend/seed.json
-backend/data/
+data/*
+!data/.gitkeep
 scratch/
 *.xlsx
 gehalt*.json
