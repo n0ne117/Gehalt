@@ -6,6 +6,22 @@ werden serverseitig als JSON-Datei gespeichert.
 
 ## Starten
 
+### Fertiges Image (z. B. auf einem Server)
+
+Bei jedem Push auf `main` baut GitHub Actions ein Image (amd64 + arm64) und
+veröffentlicht es als `ghcr.io/n0ne117/gehalt:latest`. Auf dem Server genügt
+die `docker-compose.yml` in einem leeren Ordner:
+
+```bash
+mkdir gehalt && cd gehalt
+curl -fsSLO https://raw.githubusercontent.com/n0ne117/Gehalt/main/docker-compose.yml
+mkdir data && docker compose pull && docker compose up -d
+```
+
+Update: `docker compose pull && docker compose up -d`
+
+### Aus dem Quellcode
+
 ```bash
 docker compose up --build
 ```
@@ -66,6 +82,7 @@ docker compose cp gehalt:/data/gehalt.json ./gehalt-backup.json
 | `backend/app.py` | FastAPI-Server (API + Auslieferung des Frontends) |
 | `frontend/` | Single-Page-App (HTML / CSS / JS, ohne Build-Schritt) |
 | `Dockerfile`, `docker-compose.yml` | Container-Setup |
+| `.github/workflows/docker.yml` | Baut und veröffentlicht das Image (ghcr.io) |
 
 ## API
 
