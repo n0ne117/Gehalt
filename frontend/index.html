@@ -24,6 +24,9 @@
     </div>
     <div class="topbar-right">
       <span id="saveStatus" class="save-status" data-state="idle">Bereit</span>
+      <button id="exportBtn" class="btn" type="button" title="Alle Daten als JSON-Datei herunterladen">Export</button>
+      <button id="importBtn" class="btn" type="button" title="Daten aus einer JSON-Datei laden (ersetzt alles)">Import</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden />
       <button id="themeToggle" class="btn btn-icon-toggle" type="button" title="Hell / Dunkel umschalten"></button>
       <button id="addYearBtn" class="btn btn-primary" type="button">+ Jahr hinzufügen</button>
     </div>

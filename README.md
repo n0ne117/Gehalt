@@ -12,9 +12,8 @@ docker compose up --build
 
 Dann im Browser öffnen: <http://localhost:9605>
 
-Beim ersten Start wird die Datenbasis aus `backend/seed.json` angelegt, falls
-diese Datei vorhanden ist (sonst startet die App leer). `seed.json` enthält
-private Gehaltsdaten und ist deshalb **nicht** im Repository (`.gitignore`).
+Beim ersten Start ist die App leer. Vorhandene Daten werden über **Import**
+geladen (siehe unten).
 
 ### Lokal ohne Docker
 
@@ -37,6 +36,9 @@ DATA_FILE=./backend/data/gehalt.json .venv/bin/uvicorn app:app --app-dir backend
 - **% KV** (Kollektivvertrag) wird von Hand eingegeben.
 - Änderungen werden automatisch gespeichert (Status oben rechts).
 - **+ Jahr hinzufügen** ergänzt ein neues Jahr; das ✕ löscht eines.
+- **Export** lädt alle Daten als `gehalt-JJJJ-MM-TT.json` herunter.
+- **Import** lädt eine solche Datei und **ersetzt** alle aktuellen Daten
+  (mit Rückfrage). Akzeptiert auch eine reine Liste von Jahren.
 - Liegt die Erhöhung im Jänner, wird mit dem Dezember des Vorjahres verglichen.
 
 ## Speicherung
@@ -44,8 +46,11 @@ DATA_FILE=./backend/data/gehalt.json .venv/bin/uvicorn app:app --app-dir backend
 Die Daten liegen in einer JSON-Datei im Docker-Volume `gehalt-data`
 (`/data/gehalt.json` im Container; Docker benennt das Volume meist
 `gehalt_gehalt-data`). Das Volume bleibt über Rebuilds hinweg erhalten.
-Private Daten (`seed.json`, `backend/data/`, `*.xlsx`, `gehalt*.json`) sind
-per `.gitignore` vom Repository ausgeschlossen. Sicherungskopie:
+Private Daten (`backend/data/`, `*.xlsx`, `gehalt*.json`, `seed.json`) sind
+per `.gitignore` vom Repository ausgeschlossen.
+
+**Umzug auf eine neue Instanz:** in der alten App *Export*, neue Instanz
+starten, dort *Import*. Alternativ per Kommandozeile sichern:
 
 ```bash
 docker compose cp gehalt:/data/gehalt.json ./gehalt-backup.json
@@ -56,7 +61,6 @@ docker compose cp gehalt:/data/gehalt.json ./gehalt-backup.json
 | Pfad | Inhalt |
 |------|--------|
 | `backend/app.py` | FastAPI-Server (API + Auslieferung des Frontends) |
-| `backend/seed.json` | Aus der Excel-Datei importierte Startdaten (privat, nicht im Repo) |
 | `frontend/` | Single-Page-App (HTML / CSS / JS, ohne Build-Schritt) |
 | `Dockerfile`, `docker-compose.yml` | Container-Setup |
 
@@ -66,5 +70,6 @@ docker compose cp gehalt:/data/gehalt.json ./gehalt-backup.json
 |---------|------|-------|
 | `GET` | `/api/data` | gesamten Datensatz lesen |
 | `PUT` | `/api/data` | gesamten Datensatz ersetzen (validiert, atomar) |
+| `GET` | `/api/export` | gesamten Datensatz als Datei-Download |
 | `GET` | `/api/health` | Health-Check |
 | `GET` | `/api/docs` | OpenAPI-Doku |

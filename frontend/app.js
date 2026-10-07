@@ -353,6 +353,15 @@ function wireEvents() {
   });
 
   document.getElementById("addYearBtn").addEventListener("click", addYear);
+  document.getElementById("exportBtn").addEventListener("click", exportData);
+  document.getElementById("importBtn").addEventListener("click", () => {
+    document.getElementById("importFile").click();
+  });
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow picking the same file again
+    if (file) importData(file);
+  });
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
   // Flush pending edits when the tab is hidden and warn before losing them.
@@ -410,6 +419,66 @@ function addYear() {
   const rows = document.querySelectorAll("#gridBody tr.year-start");
   const el = rows[rows.length - 1];
   if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// --------------------------------------------------------------------------- //
+// Export / import
+// --------------------------------------------------------------------------- //
+async function exportData() {
+  // Make sure the file contains the latest edits.
+  if (dirty || saving) await save();
+  if (dirty) return; // save failed – the toast already explains why
+  const a = document.createElement("a");
+  a.href = "/api/export";
+  a.download = "";
+  a.click();
+}
+
+// Accepts an export of this app, or a bare list of years.
+async function importData(file) {
+  let incoming;
+  try {
+    incoming = JSON.parse(await file.text());
+  } catch (err) {
+    toast("Import fehlgeschlagen: keine gültige JSON-Datei.");
+    return;
+  }
+  if (Array.isArray(incoming)) incoming = { years: incoming };
+  if (!incoming || !Array.isArray(incoming.years)) {
+    toast("Import fehlgeschlagen: Datei enthält keine Jahresdaten.");
+    return;
+  }
+  const n = incoming.years.length;
+  const msg = dataset.years.length
+    ? `Alle aktuellen Daten (${dataset.years.length} Jahre) durch ${n} Jahre aus „${file.name}" ersetzen?`
+    : `${n} Jahre aus „${file.name}" importieren?`;
+  if (!confirm(msg)) return;
+
+  // Drop pending edits – the import replaces everything anyway.
+  clearTimeout(saveTimer);
+  dirty = false;
+  if (saving) await saving;
+
+  setStatus("saving", "Importieren…");
+  try {
+    const res = await fetch("/api/data", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schemaVersion: 1, months: MONTHS, years: incoming.years }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    dataset = await res.json(); // validated, sorted, defaults filled in
+  } catch (err) {
+    setStatus("error", "Import fehlgeschlagen");
+    toast("Import fehlgeschlagen: " + err.message);
+    return;
+  }
+  // A successful import also recovers from a failed initial load.
+  readOnly = false;
+  document.getElementById("addYearBtn").disabled = false;
+  document.getElementById("gridBody").inert = false;
+  render();
+  setStatus("saved", `${n} Jahre importiert ✓`);
 }
 
 function toast(msg) {

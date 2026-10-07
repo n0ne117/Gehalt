@@ -5,31 +5,30 @@ FastAPI backend:
   * serves the single-page frontend
   * GET  /api/data  -> full dataset (raw stored values)
   * PUT  /api/data  -> replace full dataset (validated, atomic write)
+  * GET  /api/export -> full dataset as a downloadable JSON file
 
 Data is persisted as a single human-readable JSON file on the server.
 Its location is configurable via the DATA_FILE env var and defaults to
-/data/gehalt.json (mounted as a Docker volume). On first run – when no
-data file exists yet – it is seeded from seed.json (the imported Excel data)
-if that file is present. seed.json holds private data and is not part of
-the repository; without it the app starts empty.
+/data/gehalt.json (mounted as a Docker volume). On first run the file is
+created empty; existing data is brought in via the import in the frontend
+(which PUTs an exported file to /api/data).
 """
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import tempfile
 import threading
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
-SEED_FILE = BASE_DIR / "seed.json"
 DATA_FILE = Path(os.environ.get("DATA_FILE", "/data/gehalt.json"))
 
 MONTHS = [
@@ -86,13 +85,8 @@ class Dataset(BaseModel):
 # Storage helpers
 # --------------------------------------------------------------------------- #
 def _ensure_data_file() -> None:
-    """Create the data file from the seed on first run."""
-    if DATA_FILE.exists():
-        return
-    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if SEED_FILE.exists():
-        shutil.copyfile(SEED_FILE, DATA_FILE)
-    else:  # no private seed available: start with an empty dataset
+    """Create an empty data file on first run."""
+    if not DATA_FILE.exists():
         _atomic_write({"schemaVersion": 1, "months": list(MONTHS), "years": []})
 
 
@@ -134,6 +128,15 @@ def put_data(dataset: Dataset) -> dict:
     with _write_lock:
         _atomic_write(payload)
     return payload
+
+
+@app.get("/api/export")
+def export_data() -> JSONResponse:
+    filename = f"gehalt-{date.today().isoformat()}.json"
+    return JSONResponse(
+        _load(),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/api/health")
